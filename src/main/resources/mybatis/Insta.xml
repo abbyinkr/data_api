@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.abby.instagram.mapper.InstaMapper">
+
+	<!-- 연동계정 저장 -->
+	<insert id="addInfo" parameterType="kr.co.abby.instagram.vo.LinkedAccountVo">
+		INSERT INTO instagram.linkedAccountInfo(accessToken, pageToken, businessId, pageId, fbName, regdate, status)
+		VALUES(#{accessToken}, #{pageToken}, #{businessId}, #{pageId}, #{fbName}, #{regdate}, #{status})
+	</insert>
+	
+	<!-- 연동계정 중복 확인 -->
+	<select id="checkId" parameterType="String" resultType="int">
+		SELECT COUNT(SEQ)
+		FROM instagram.linkedAccountInfo
+		WHERE pageId = #{pageId}
+	</select>
+	
+	<select id="getLinkedAccount" resultType="kr.co.abby.instagram.vo.LinkedAccountVo">
+		SELECT accessToken, pageToken, businessId, pageId, fbName
+		FROM instagram.linkedAccountInfo
+		WHERE status = 1
+	</select>
+	
+	<!-- Account 저장 -->
+	<insert id="addAccount" parameterType="kr.co.abby.instagram.vo.AccountVo">
+	</insert>
+	
+	
+	<insert id="addACcount">
+	  	LOAD DATA INFILE #{filePath} IGNORE
+	  	INTO TABLE gather_instagram.account   CHARACTER SET UTF8MB4   FIELDS   TERMINATED BY ','
+	  	IGNORE 1 ROWS
+	  	(@date,@hh,@datehh,@regdate,@id,@biography,@followers_count
+	  	,@follows_count,@media_count,@name,@profile_picture_url,@username)
+	  SET seq = null
+	  	, date = @date, hh = @hh, datehh= @datehh,regdate = @regdate,id = @id,biography = @biography
+	 	,followers_count = @followers_count,follows_count = @follows_count,media_count = @media_count
+	  	,name = @name, profile_picture_url = @profile_picture_url,username =@username
+	</insert>
+	
+	<insert id="addMedia">
+		LOAD DATA INFILE #{filePath} IGNORE
+	     INTO TABLE gather_instagram.media   CHARACTER SET UTF8MB4   FIELDS   TERMINATED BY ','
+	     IGNORE 1 ROWS
+	     (@date,@hh,@datehh,@regdate,@caption,@comments_count,@id,@is_comment_enabled,@like_count
+	     ,@media_product_type,@media_type,@media_url,@owner,@permalink,@shortcode,@timestamp,@username)
+	     SET seq = null
+	     ,date = @date, hh = @hh , datehh = @datehh, regdate = @regdate, caption = @caption, comments_count = @comments_count
+	     ,id = @id, is_comment_enabled = @is_comment_enabled ,like_count = @like_count
+	     ,media_product_type = @media_product_type ,media_type = @media_type
+	     ,media_url = @media_url, owner = @owner, permalink = @permalink, shortcode = @shortcode ,timestamp = @timestamp ,username = @username
+	</insert>
+	
+	<insert id="addComment">
+	   LOAD DATA INFILE #{filePath} IGNORE
+	  INTO TABLE gather_instagram.comment   CHARACTER SET UTF8MB4   FIELDS   TERMINATED BY ','
+	  IGNORE 1 ROWS
+	  (@date, @hh, @datehh, @regdate, @media_id, @from_id, @id, @text, @timestamp, @parent_id, @isReplies)
+	  SET seq = null
+	  , date = @date, hh = @hh, datehh = @datehh, regdate = @regdate, media_id = @media_id, from_id = @from_id, id = @id, text = @text
+	  , timestamp = @timestamp, parent_id = @parent_id, isReplies = @isReplies
+	</insert>
+	
+	
+	
+	
+	<!-- logVo 최초 INSERT 후 pk값 LogVo에 넘겨줌 -->
+	<insert id="addLog" parameterType="kr.co.abby.instagram.vo.LogVo" useGeneratedKeys="true" keyProperty="seq" keyColumn="seq">
+		INSERT INTO instagram.gather_log(date, hh, datehh, regdate, type, status, message) 
+		VALUES (#{date}, #{hh}, #{datehh}, #{regdate}, #{type}, #{status}, #{message})
+	</insert>
+	
+	<!-- log 업데이트 -->
+	<update id="updateLog" parameterType="kr.co.abby.instagram.vo.LogVo">
+		UPDATE instagram.gather_log
+		SET message = #{message}, status = #{status}
+		WHERE seq = #{seq}
+	</update>
+
+</mapper>

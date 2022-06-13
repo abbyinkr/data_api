@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.abby.youtube.mapper.YoutubeMapper">
+
+	
+	<select id="getLinkedChannel" resultType="kr.co.abby.youtube.vo.LinkedChannelVo">
+	 	SELECT seq, apiKey, channelId, playlistId, title, description, status
+		 FROM youtube.linkedChannelInfo
+		 WHERE STATUS = 1
+	</select>
+	
+	
+	<select id="getVideoListSeq" parameterType="String" resultType="kr.co.abby.youtube.vo.PlayListItemsVo" >
+	 	SELECT seq, videoId, datehh, date, hh
+		FROM gather_youtube.playlistitems
+		where datehh = #{datehh}
+	</select>
+	
+	
+	<!-- 연동계정 중복 확인 -->
+	<select id="checKChannels" parameterType="String" resultType="int">
+		SELECT count(seq)
+		FROM gather_youtube.channels
+		WHERE id = #{id}
+	</select>
+	
+	
+	<!-- logVo 최초 INSERT 후 pk값 LogVo에 넘겨줌 -->
+	<insert id="addLog" parameterType="kr.co.abby.youtube.vo.LogVo" useGeneratedKeys="true" keyProperty="seq" keyColumn="seq">
+		INSERT INTO youtube.gather_log(date, hh, datehh, regdate, type, fileName, status, message) 
+		VALUES (#{date}, #{hh}, #{datehh}, #{regdate}, #{type}, #{fileName}, #{status}, #{message})
+	</insert>
+	
+	<!-- log 업데이트 -->
+	<update id="updateLog" parameterType="kr.co.abby.youtube.vo.LogVo">
+		UPDATE youtube.gather_log
+		SET message = #{message}, status = #{status}
+		WHERE seq = #{seq}
+	</update>
+	
+	<select id="getLog" resultType="kr.co.abby.youtube.vo.LogVo">
+		SELECT seq, date, hh, datehh, regdate, type, fileName, status, message
+		FROM youtube.gather_log
+		WHERE seq = #{seq}
+	</select>
+	
+	<insert id="insertChannel">
+		LOAD DATA INFILE #{filePath} IGNORE
+			INTO TABLE gather_youtube.channels CHARACTER SET UTF8MB4 FIELDS TERMINATED BY ','
+			IGNORE 1 ROWS
+			(@date, @hh, @datehh, @regdate, @id, @title, @description, @publishedAt, @thumbnailUrl
+				, @uploads, @viewCount, @subscriberCount, @hiddenSubscriberCount, @videoCount)
+		SET seq = null
+		       , date = @date, hh = @hh, datehh = @datehh,regdate = @regdate, id = @id, title = @title
+		       ,description = @description, publishedAt = @publishedAt, thumbnailUrl = @thumbnailUrl
+		       ,uploads = @uploads
+		       , viewCount = @viewCount, subscriberCount =@subscriberCount
+		       , hiddenSubscriberCount = @hiddenSubscriberCount, videoCount = @videoCount
+	</insert>
+	<insert id="insertPlayListItems">
+		LOAD DATA INFILE  #{filePath} IGNORE
+			 INTO TABLE gather_youtube.playlistitems CHARACTER SET UTF8MB4 FIELDS TERMINATED BY ','
+			 IGNORE 1 ROWS
+			 (@date,@hh,@datehh,@regdate,@id,@publishedAt,@title,@description,@thumbnailUrl,@position,@kind
+			  ,@channelTitle,@channelId,@videoId,@videoPublishedAt)
+		 SET seq = null
+	         , date = @date, hh = @hh, datehh = @datehh,regdate = @regdate, id = @id, publishedAt = @publishedAt   
+	         ,title = @title, description = @description, thumbnailUrl = @thumbnailUrl  
+	         ,position = @position, kind = @kind, channelTitle =@channelTitle
+	         ,channelId = @channelId, videoId = @videoId, videoPublishedAt = @videoPublishedAt
+	</insert>
+	
+	<insert id="insertVideos">
+	LOAD DATA INFILE #{filePath} IGNORE
+	 	 INTO TABLE gather_youtube.videos CHARACTER SET UTF8MB4 FIELDS TERMINATED BY ','
+	 	 IGNORE 1 ROWS
+	 	 (@date, @hh, @datehh, @regdate, @id, @playlistSeq, @categoryId
+	 	 , @liveBroadcastContent, @viewCount, @likeCount, @favoriteCount, @commentCount)
+	 	 SET seq = null, seq = null
+		 , date = @date, hh = @hh, datehh = @datehh,regdate = @regdate, id = @id, playlistSeq= @playlistSeq, categoryId = @categoryId   
+		 ,liveBroadcastContent = @liveBroadcastContent, viewCount = @viewCount, likeCount = @likeCount  
+         ,favoriteCount = @favoriteCount, commentCount = @commentCount
+	
+	</insert>
+	
+	<insert id="insertComments">
+	LOAD DATA INFILE #{filePath} IGNORE                                            
+	 INTO TABLE gather_youtube.comments CHARACTER SET UTF8MB4 FIELDS TERMINATED BY ','                                           
+	 IGNORE 1 ROWS                                                                                                               
+	 (@date,@hh,@datehh,@regdate,@id,@videoId,@textOriginal,@authorDisplayName                                                   
+	 ,@authorProfileImageUrl,@authorChannelUrl,@authorChannelId                                                                  
+	 ,@canRate,@viewerRating,@likeCount,@publishedAt,@updatedAt,@canReply,@totalReplyCount,@isPublic)                            
+	 SET seq = null                                                                                                              
+	 , date = @date, hh = @hh, datehh = @datehh, regdate = @regdate, id = @id, videoId = @videoId                                
+	 , textOriginal = @textOriginal, authorDisplayName = @authorDisplayName, authorProfileImageUrl = @authorProfileImageUrl      
+	 , authorChannelUrl = @authorChannelUrl, authorChannelId = @authorChannelId, canRate = @canRate, viewerRating = @viewerRating
+	 , likeCount = @likeCount, publishedAt = @publishedAt, updatedAt = @updatedAt, canReply = @canReply                          
+	 , totalReplyCount = @totalReplyCount, isPublic = @isPublic                                                               
+	
+	
+	</insert>
+	
+	
+</mapper>
