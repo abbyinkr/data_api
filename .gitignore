@@ -31,3 +31,13 @@ build/
 
 ### VS Code ###
 .vscode/
+
+
+# 추가
+
+*.properties
+mvnw
+mvnw.cmd
+/.metadata
+/.mvn/wrapper
+/logs
